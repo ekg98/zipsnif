@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include "zip.h"
 
 void getZipLocations(FILE *, struct zipDataLocations *);
@@ -34,11 +33,12 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	struct zipDataLocations locations;
+	struct zipFileDataStructure zipNameStructure;
 
-	getZipLocations(zipName, &locations);
+	getZipLocations(zipName, &zipNameStructure.locations);
 
-	printf("Central Directory File Header is %ld bytes from beginning of file %s.\n", locations.centralDirectoryFileHeader, argv[1]);
+	//printf("Central Directory File Header is %ld bytes from beginning of file %s.\n", zipNameStructure.locations.centralDirectoryFileHeader, argv[1]);
+	printf("End of central directory record is %ld bytes from beginning of file %s.\n", zipNameStructure.locations.endCentralDirectoryRecordLocation, argv[1]);
 
 	fclose(zipName);
 	return 0;
@@ -50,7 +50,7 @@ void getZipLocations(FILE *zipFile, struct zipDataLocations *zipFileLocations)
 	long byteLocation = 0;
 
 	// locate central directory file header 0x50 0x4b 0x01 0x02
-	while((zipData = fgetc(zipFile)) != EOF)
+	/*while((zipData = fgetc(zipFile)) != EOF)
 	{
 		// locate the 0x50
 		if(zipData == 0x50)
@@ -80,7 +80,46 @@ void getZipLocations(FILE *zipFile, struct zipDataLocations *zipFileLocations)
 		}
 
 		byteLocation++;
+	}*/
+
+	byteLocation = 0;
+	rewind(zipFile);
+
+	// locate the end of central directory record
+	while((zipData = fgetc(zipFile)) != EOF)
+	{
+		// locate the 0x50
+		if(zipData == 0x50)
+		{
+			// store the start of a 0x50 string in a temporary location
+			long tempLocation;
+			tempLocation = byteLocation;
+
+			// locate 0x4b after 0x50
+			byteLocation++;
+			if((zipData = fgetc(zipFile)) == 0x4b)
+			{
+				// locate 0x05 after 0x4b
+				byteLocation++;
+				if((zipData = fgetc(zipFile)) == 0x05)
+				{
+					// locate 0x06 after 0x05
+					byteLocation++;
+					if((zipData = fgetc(zipFile)) == 0x06)
+					{
+						zipFileLocations->endCentralDirectoryRecordLocation = tempLocation;
+						break;
+					}
+				}
+			}
+
+		}
+
+		byteLocation++;
 	}
+
+	byteLocation = 0;
+	rewind(zipFile);
 
 	return;
 }
