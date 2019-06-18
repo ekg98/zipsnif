@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include "zip.h"
 
-void getZipLocations(FILE *, struct zipDataLocations *);
+void findEndOfCentralDirectoryLocation(FILE *, struct zipDataLocations *);
+void getEndCentralDirectoryData(FILE *, struct zipFileDataStructure *);
 
 int main(int argc, char *argv[])
 {
@@ -16,7 +17,8 @@ int main(int argc, char *argv[])
 	}
 	else if(argc > 2)
 	{
-		fprintf(stderr, "zipsnif: One file at a time please.\n");
+		fprintf(stderr, "zipsnif: Too many arguments.\n");
+		fprintf(stderr, "\tUseage: zipsnif <file>\n");
 		exit(1);
 	}
 
@@ -35,7 +37,8 @@ int main(int argc, char *argv[])
 
 	struct zipFileDataStructure zipNameStructure;
 
-	getZipLocations(zipName, &zipNameStructure.locations);
+	findEndOfCentralDirectoryLocation(zipName, &zipNameStructure.locations);
+	getEndCentralDirectoryData(zipName, &zipNameStructure);
 
 	//printf("Central Directory File Header is %ld bytes from beginning of file %s.\n", zipNameStructure.locations.centralDirectoryFileHeader, argv[1]);
 	printf("End of central directory record is %ld bytes from beginning of file %s.\n", zipNameStructure.locations.endCentralDirectoryRecordLocation, argv[1]);
@@ -44,45 +47,11 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-void getZipLocations(FILE *zipFile, struct zipDataLocations *zipFileLocations)
+void findEndOfCentralDirectoryLocation(FILE *zipFile, struct zipDataLocations *zipFileLocations)
 {
 	int zipData;
 	long byteLocation = 0;
 
-	// locate central directory file header 0x50 0x4b 0x01 0x02
-	/*while((zipData = fgetc(zipFile)) != EOF)
-	{
-		// locate the 0x50
-		if(zipData == 0x50)
-		{
-			// store the start of a 0x50 string in a temporary location
-			long tempLocation;
-			tempLocation = byteLocation;
-
-			// locate 0x4b after 0x50
-			byteLocation++;
-			if((zipData = fgetc(zipFile)) == 0x4b)
-			{
-				// locate 0x01 after 0x4b
-				byteLocation++;
-				if((zipData = fgetc(zipFile)) == 0x01)
-				{
-					// locate 0x02 after 0x01
-					byteLocation++;
-					if((zipData = fgetc(zipFile)) == 0x02)
-					{
-						zipFileLocations->centralDirectoryFileHeader = tempLocation;
-						break;
-					}
-				}
-			}
-
-		}
-
-		byteLocation++;
-	}*/
-
-	byteLocation = 0;
 	rewind(zipFile);
 
 	// locate the end of central directory record
@@ -122,4 +91,19 @@ void getZipLocations(FILE *zipFile, struct zipDataLocations *zipFileLocations)
 	rewind(zipFile);
 
 	return;
+}
+
+// getEndCentralDirectoryData
+void getEndCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dataStructure)
+{
+	uint32_t *fourByteTemp = NULL;
+	uint16_t *twoByteTemp = NULL;
+	uint8_t *oneByteTemp = NULL;
+	void *ptr = NULL;
+
+	fseek(zipFile, dataStructure->locations.endCentralDirectoryRecordLocation, SEEK_SET);
+
+	//fread(ptr, 4, 1, zipFile);
+
+	/*printf("%#x %#x %#x %#x\n", fgetc(zipFile), fgetc(zipFile), fgetc(zipFile), fgetc(zipFile));*/
 }
