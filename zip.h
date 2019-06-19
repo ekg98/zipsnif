@@ -31,6 +31,7 @@ struct centralDirectoryFileHeaderData
 	char *fileName;				// file name
 	char *extraField;			// extra field
 	char *fileComment;			// file comment
+	struct centralDirectoryFileHeaderData *next;	// pointer to next element of the CD
 };
 
 // structure containing the end of central directory record data
@@ -38,7 +39,7 @@ struct endCentralDirectoryRecordData
 {
 	uint32_t signature;			// The signature of the end of central directory record 0x50 0x4b 0x05 0x06
 	uint16_t diskNumber;			// The number of this disk ( containing end of central directory record)
-	uint16_t diskNumberWithCd;		// Number of the disk on which the central directory record starts
+	uint16_t diskNumberCdStart;		// Number of the disk on which the central directory record starts
 	uint16_t diskEntries;			// Number of central directory entries on this disk
 	uint16_t totalEntries;			// Number of total entries in the central directory
 	uint32_t centralDirectorySize;		// Size of central directory in bytes
@@ -52,4 +53,5 @@ struct zipFileDataStructure
 {
 	struct zipDataLocations locations;
 	struct endCentralDirectoryRecordData endCentralDirectoryRecord;
+	struct centralDirectoryFileHeaderData *root;
 };

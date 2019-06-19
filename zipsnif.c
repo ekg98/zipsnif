@@ -6,6 +6,7 @@
 
 void findEndOfCentralDirectoryLocation(FILE *, struct zipDataLocations *);
 void getEndCentralDirectoryData(FILE *, struct zipFileDataStructure *);
+void getCentralDirectoryData(FILE *, struct zipFileDataStructure *);
 
 int main(int argc, char *argv[])
 {
@@ -36,13 +37,16 @@ int main(int argc, char *argv[])
 	}
 
 	struct zipFileDataStructure zipNameStructure;
+	zipNameStructure.root = NULL;
 
 	findEndOfCentralDirectoryLocation(zipName, &zipNameStructure.locations);
 	getEndCentralDirectoryData(zipName, &zipNameStructure);
+	getCentralDirectoryData(zipName, &zipNameStructure);
 
-	//printf("Central Directory File Header is %ld bytes from beginning of file %s.\n", zipNameStructure.locations.centralDirectoryFileHeader, argv[1]);
-	printf("End of central directory record is %ld bytes from beginning of file %s.\n", zipNameStructure.locations.endCentralDirectoryRecordLocation, argv[1]);
+	//printf("End of central directory record is %ld bytes from beginning of file %s.\n", zipNameStructure.locations.endCentralDirectoryRecordLocation, argv[1]);
 
+	// free end of cd comment memory
+	free(zipNameStructure.endCentralDirectoryRecord.comment);
 	fclose(zipName);
 	return 0;
 }
@@ -96,14 +100,99 @@ void findEndOfCentralDirectoryLocation(FILE *zipFile, struct zipDataLocations *z
 // getEndCentralDirectoryData
 void getEndCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dataStructure)
 {
-	uint32_t *fourByteTemp = NULL;
-	uint16_t *twoByteTemp = NULL;
-	uint8_t *oneByteTemp = NULL;
-	void *ptr = NULL;
+	uint32_t fourByteTemp;
+	uint16_t twoByteTemp;
+	uint8_t oneByteTemp;
+	char *comment = NULL;
+	char *commentPtr = NULL;
 
+	// set the file cursor location to the end of central directory record
 	fseek(zipFile, dataStructure->locations.endCentralDirectoryRecordLocation, SEEK_SET);
 
-	//fread(ptr, 4, 1, zipFile);
+	// obtain the end of central directory signature
+	fread(&fourByteTemp, 4, 1, zipFile);
+	dataStructure->endCentralDirectoryRecord.signature = fourByteTemp;
+	printf("Signaute: %#x\n", dataStructure->endCentralDirectoryRecord.signature);
 
-	/*printf("%#x %#x %#x %#x\n", fgetc(zipFile), fgetc(zipFile), fgetc(zipFile), fgetc(zipFile));*/
+	// obtain the disk number where end of central directory starts
+	fread(&twoByteTemp, 2, 1, zipFile);
+	dataStructure->endCentralDirectoryRecord.diskNumber = twoByteTemp;
+	printf("Disk number: %d\n", dataStructure->endCentralDirectoryRecord.diskNumber);
+
+	// obtain the disk number where the central directory starts
+	fread(&twoByteTemp, 2, 1, zipFile);
+	dataStructure->endCentralDirectoryRecord.diskNumberCdStart = twoByteTemp;
+	printf("Disk number where CD starts: %d\n", dataStructure->endCentralDirectoryRecord.diskNumberCdStart);
+
+	// obtain the number central directory disk entries
+	fread(&twoByteTemp, 2, 1, zipFile);
+	dataStructure->endCentralDirectoryRecord.diskEntries = twoByteTemp;
+	printf("Disk entries: %d\n", dataStructure->endCentralDirectoryRecord.diskEntries);
+
+	// obtain the total amount of entries in the central directory
+	fread(&twoByteTemp, 2, 1, zipFile);
+	dataStructure->endCentralDirectoryRecord.totalEntries = twoByteTemp;
+	printf("Total entries in CD: %d\n", dataStructure->endCentralDirectoryRecord.totalEntries);
+
+	// obtain the size of the central directory in bytes
+	fread(&fourByteTemp, 4, 1, zipFile);
+	dataStructure->endCentralDirectoryRecord.centralDirectorySize = fourByteTemp;
+	printf("Size of CD in bytes: %d\n", dataStructure->endCentralDirectoryRecord.centralDirectorySize);
+
+	// obtain the offset of the central directory
+	fread(&fourByteTemp, 4, 1, zipFile);
+	dataStructure->endCentralDirectoryRecord.offsetCdStart = fourByteTemp;
+	printf("CD offset: %#x\n", dataStructure->endCentralDirectoryRecord.offsetCdStart);
+
+	// obtain the comment length in bytes
+	fread(&twoByteTemp, 2, 1, zipFile);
+	dataStructure->endCentralDirectoryRecord.commentLength = twoByteTemp;
+	printf("Comment length: %d\n", dataStructure->endCentralDirectoryRecord.commentLength);
+
+	// allocate memory for the comment
+	comment = (char *) malloc(twoByteTemp + 1);
+	commentPtr = comment;
+
+	// obtain the comment and append end of string indicator
+	fread(comment, 1, twoByteTemp, zipFile);
+	commentPtr = commentPtr + (twoByteTemp + 1);
+	*commentPtr = '\0';
+	dataStructure->endCentralDirectoryRecord.comment = comment;
+	printf("Comment: %s\n", comment);
+
+	comment = NULL;
+	commentPtr = NULL;
+
+	return;
+}
+
+void getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dataStructure)
+{
+	struct centralDirectoryFileHeaderData *tempCd = NULL;
+
+	// allocate memory for the first central directory file header if there is none
+	if(dataStructure->root == NULL)
+	{
+		dataStructure->root = (struct centralDirectoryFileHeaderData *) malloc(sizeof(struct centralDirectoryFileHeaderData));
+		dataStructure->root->next = NULL;
+	}
+	else	// allocate for a new entry and push the old on down the line
+	{
+		tempCd = dataStructure->root;
+		dataStructure->root = (struct centralDirectoryFileHeaderData *) malloc(sizeof(struct centralDirectoryFileHeaderData));
+		dataStructure->root->next = tempCd;
+		tempCd = NULL;
+	}
+
+	// Point to the root central directory
+	tempCd = dataStructure->root;
+
+	// free allocated central directories
+	while(tempCd != NULL)
+	{
+		tempCd = dataStructure->root->next;
+		free(dataStructure->root);
+	}
+
+	return;
 }
