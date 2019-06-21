@@ -6,7 +6,7 @@
 
 void findEndOfCentralDirectoryLocation(FILE *, struct zipDataLocations *);
 void getEndCentralDirectoryData(FILE *, struct zipFileDataStructure *);
-void getCentralDirectoryData(FILE *, struct zipFileDataStructure *);
+void getCentralDirectoryData(FILE *, struct zipFileDataStructure *, uint32_t);
 
 int main(int argc, char *argv[])
 {
@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 
 	findEndOfCentralDirectoryLocation(zipName, &zipNameStructure.locations);
 	getEndCentralDirectoryData(zipName, &zipNameStructure);
-	getCentralDirectoryData(zipName, &zipNameStructure);
+	getCentralDirectoryData(zipName, &zipNameStructure, zipNameStructure.endCentralDirectoryRecord.offsetCdStart);
 
 	//printf("End of central directory record is %ld bytes from beginning of file %s.\n", zipNameStructure.locations.endCentralDirectoryRecordLocation, argv[1]);
 
@@ -166,9 +166,14 @@ void getEndCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *data
 	return;
 }
 
-void getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dataStructure)
+void getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dataStructure, uint32_t offset)
 {
 	struct centralDirectoryFileHeaderData *tempCd = NULL;
+
+	// temporary variables
+	uint8_t oneByteTemp;
+	uint16_t twoByteTemp;
+	uint32_t fourByteTemp;
 
 	// allocate memory for the first central directory file header if there is none
 	if(dataStructure->root == NULL)
@@ -184,10 +189,77 @@ void getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dataStr
 		tempCd = NULL;
 	}
 
-	// Point to the root central directory
-	tempCd = dataStructure->root;
+	// set offset position to the start of the cd
+	fseek(zipFile, offset, SEEK_SET);
 
-	// free allocated central directories
+	// signature of central directory file header
+	fread(&fourByteTemp, 4, 1, zipFile);
+	dataStructure->root->signature = fourByteTemp;
+	printf("Signature: %#x\n", dataStructure->root->signature);
+
+	// version made by
+	fread(&twoByteTemp, 2, 1, zipFile);
+	dataStructure->root->versionCreatedWith = twoByteTemp;
+	printf("Version made by: %#x\n", dataStructure->root->versionCreatedWith);
+
+	// version needed to extract
+	fread(&twoByteTemp, 2, 1, zipFile);
+	dataStructure->root->versionNeededToExtract = twoByteTemp;
+	printf("Version needed to extract: %d\n", dataStructure->root->versionNeededToExtract);
+
+	// flags
+	fread(&twoByteTemp, 2, 1, zipFile);
+	dataStructure->root->flags = twoByteTemp;
+	printf("Flags: %#x\n", dataStructure->root->flags);
+
+	// compression method
+	fread(&twoByteTemp, 2, 1, zipFile);
+	dataStructure->root->compressionMethod = twoByteTemp;
+	printf("Compression method: %d\n", dataStructure->root->compressionMethod);
+
+	// file modification time
+	fread(&twoByteTemp, 2, 1, zipFile);
+	dataStructure->root->lastModTime = twoByteTemp;
+	printf("Modification time: %#x\n", dataStructure->root->lastModTime);
+
+	// file modification date
+	fread(&twoByteTemp, 2, 1, zipFile);
+	dataStructure->root->lastModDate = twoByteTemp;
+	printf("Modification date: %#x\n", dataStructure->root->lastModDate);
+
+	// crc32
+	fread(&fourByteTemp, 4, 1, zipFile);
+	dataStructure->root->crc32 = fourByteTemp;
+	printf("crc32: %#x\n", dataStructure->root->crc32);
+
+	// compressed size
+	fread(&fourByteTemp, 4, 1, zipFile);
+	dataStructure->root->compressedSize = fourByteTemp;
+	printf("Compressed size: %d\n", dataStructure->root->compressedSize);
+
+	// uncompressed size
+	fread(&fourByteTemp, 4, 1, zipFile);
+	dataStructure->root->uncompressedSize = fourByteTemp;
+	printf("Uncompressed size: %d\n", dataStructure->root->uncompressedSize);
+
+	// file name length
+	fread(&twoByteTemp, 2, 1, zipFile);
+	dataStructure->root->fileNameLength = twoByteTemp;
+	printf("File name length: %d\n", dataStructure->root->fileNameLength);
+
+	// extra field length
+	fread(&twoByteTemp, 2, 1, zipFile);
+	dataStructure->root->extraFieldLength = twoByteTemp;
+	printf("Extra field length: %d\n", dataStructure->root->extraFieldLength);
+
+	// file comment length
+	fread(&twoByteTemp, 2, 1, zipFile);
+	dataStructure->root->fileCommentLength = twoByteTemp;
+	printf("File comment length: %d\n", dataStructure->root->fileCommentLength);
+
+	// Point to the root central directory so you can test it when freeing the structure
+	tempCd = dataStructure->root;
+	// free allocated central directories.  Temporary for testing.  Need seperate function for this.
 	while(tempCd != NULL)
 	{
 		tempCd = dataStructure->root->next;

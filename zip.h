@@ -14,7 +14,7 @@ struct centralDirectoryFileHeaderData
 	uint32_t signature;			// 0x50 0x4b 0x01 0x02
 	uint16_t versionCreatedWith;		// version of utility that created the zip
 	uint16_t versionNeededToExtract;	// version needed to extract
-	uint16_t gpflag;			// general purpose bit flag
+	uint16_t flags;			// general purpose bit flag
 	uint16_t compressionMethod;		// compression method used
 	uint16_t lastModTime;			// last modified time
 	uint16_t lastModDate;			// last modified date
