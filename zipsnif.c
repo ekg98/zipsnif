@@ -43,14 +43,12 @@ int main(int argc, char *argv[])
 	getEndCentralDirectoryData(zipName, &zipNameStructure);
 	getCentralDirectoryData(zipName, &zipNameStructure, zipNameStructure.endCentralDirectoryRecord.offsetCdStart);
 
-	//printf("End of central directory record is %ld bytes from beginning of file %s.\n", zipNameStructure.locations.endCentralDirectoryRecordLocation, argv[1]);
-
-	// free end of cd comment memory
-	free(zipNameStructure.endCentralDirectoryRecord.comment);
+	// close the file
 	fclose(zipName);
 	return 0;
 }
 
+// findEndOfCentralDirectoryLocation: finds the end of central directory offset
 void findEndOfCentralDirectoryLocation(FILE *zipFile, struct zipDataLocations *zipFileLocations)
 {
 	int zipData;
@@ -97,14 +95,12 @@ void findEndOfCentralDirectoryLocation(FILE *zipFile, struct zipDataLocations *z
 	return;
 }
 
-// getEndCentralDirectoryData
+// getEndCentralDirectoryData:  obtain the end central directory data from a archive
 void getEndCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dataStructure)
 {
 	uint32_t fourByteTemp;
 	uint16_t twoByteTemp;
 	uint8_t oneByteTemp;
-	char *comment = NULL;
-	char *commentPtr = NULL;
 
 	// set the file cursor location to the end of central directory record
 	fseek(zipFile, dataStructure->locations.endCentralDirectoryRecordLocation, SEEK_SET);
@@ -149,23 +145,19 @@ void getEndCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *data
 	dataStructure->endCentralDirectoryRecord.commentLength = twoByteTemp;
 	printf("Comment length: %d\n", dataStructure->endCentralDirectoryRecord.commentLength);
 
-	// allocate memory for the comment
-	comment = (char *) malloc(twoByteTemp + 1);
-	commentPtr = comment;
+	// archive comment (variable)
+	dataStructure->endCentralDirectoryRecord.comment = (char *) malloc(dataStructure->endCentralDirectoryRecord.commentLength + 1);
+	fread(dataStructure->endCentralDirectoryRecord.comment, 1, dataStructure->endCentralDirectoryRecord.commentLength, zipFile);
+	*(((dataStructure->endCentralDirectoryRecord.comment) + (dataStructure->endCentralDirectoryRecord.commentLength)) + 1) = '\0';
+	printf("Comment: %s\n", dataStructure->endCentralDirectoryRecord.comment);
 
-	// obtain the comment and append end of string indicator
-	fread(comment, 1, twoByteTemp, zipFile);
-	commentPtr = commentPtr + (twoByteTemp + 1);
-	*commentPtr = '\0';
-	dataStructure->endCentralDirectoryRecord.comment = comment;
-	printf("Comment: %s\n", comment);
-
-	comment = NULL;
-	commentPtr = NULL;
+	// temporary garbage handling for comment
+	free(dataStructure->endCentralDirectoryRecord.comment);
 
 	return;
 }
 
+// getCentralDirectoryData: grabs the central directory data at offset
 void getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dataStructure, uint32_t offset)
 {
 	struct centralDirectoryFileHeaderData *tempCd = NULL;
@@ -257,12 +249,56 @@ void getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dataStr
 	dataStructure->root->fileCommentLength = twoByteTemp;
 	printf("File comment length: %d\n", dataStructure->root->fileCommentLength);
 
+	// disk number on which this file exists
+	fread(&twoByteTemp, 2, 1, zipFile);
+	dataStructure->root->diskNumberStart = twoByteTemp;
+	printf("Disk: %d\n", dataStructure->root->diskNumberStart);
+
+	// Internal attributes
+	fread(&twoByteTemp, 2, 1, zipFile);
+	dataStructure->root->internalFileAttributes = twoByteTemp;
+	printf("Internal attributes: %#x\n", dataStructure->root->internalFileAttributes);
+
+	// external attributes
+	fread(&fourByteTemp, 4, 1, zipFile);
+	dataStructure->root->externalFileAttributes = fourByteTemp;
+	printf("External attributes: %#x\n", dataStructure->root->externalFileAttributes);
+
+	// offset of local header
+	fread(&fourByteTemp, 4, 1, zipFile);
+	dataStructure->root->offsetLocalFileHeader = fourByteTemp;
+	printf("Local header offset: %#x\n", dataStructure->root->offsetLocalFileHeader);
+
+	// file name (variable)
+	dataStructure->root->fileName = (char *) malloc(dataStructure->root->fileNameLength + 1);
+	fread(dataStructure->root->fileName, 1, dataStructure->root->fileNameLength, zipFile);
+	*(((dataStructure->root->fileName) + (dataStructure->root->fileNameLength)) + 1) = '\0';
+	printf("File name: %s\n", dataStructure->root->fileName);
+
+	// extra field (variable)
+	dataStructure->root->extraField = (uint8_t *) malloc(dataStructure->root->extraFieldLength);
+	fread(dataStructure->root->extraField, 1, dataStructure->root->extraFieldLength, zipFile);
+	for(int extraCounter = dataStructure->root->extraFieldLength; extraCounter > 0; extraCounter--)
+	{
+		if(extraCounter == dataStructure->root->extraFieldLength)
+			printf("Extra field: ");
+		printf("%x", *(dataStructure->root->extraField + extraCounter));
+	}
+	printf("\n");
+
+	// file comment (variable)
+	dataStructure->root->fileComment = (char *) malloc(dataStructure->root->fileCommentLength + 1);
+	fread(dataStructure->root->fileComment, 1, dataStructure->root->fileCommentLength, zipFile);
+	*(((dataStructure->root->fileComment) + (dataStructure->root->fileCommentLength)) + 1) = '\0';
+	printf("File comment: %s\n", dataStructure->root->fileComment);
+
 	// Point to the root central directory so you can test it when freeing the structure
 	tempCd = dataStructure->root;
 	// free allocated central directories.  Temporary for testing.  Need seperate function for this.
 	while(tempCd != NULL)
 	{
 		tempCd = dataStructure->root->next;
+		free(dataStructure->root->fileName);
 		free(dataStructure->root);
 	}
 

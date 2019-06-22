@@ -29,7 +29,7 @@ struct centralDirectoryFileHeaderData
 	uint32_t externalFileAttributes;	// external file attributes
 	uint32_t offsetLocalFileHeader;		// relative offset of local file header
 	char *fileName;				// file name
-	char *extraField;			// extra field
+	uint8_t *extraField;			// extra field
 	char *fileComment;			// file comment
 	struct centralDirectoryFileHeaderData *next;	// pointer to next element of the CD
 };
