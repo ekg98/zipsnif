@@ -1,12 +1,16 @@
 // zipsnif:  Simple program to search inside a zip file and return information about the file
 
+// TODO: This has no error handling
+// TODO: Handle multiple disks properly
+// TODO: proper garbage handling
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "zip.h"
 
 void findEndOfCentralDirectoryLocation(FILE *, struct zipDataLocations *);
 void getEndCentralDirectoryData(FILE *, struct zipFileDataStructure *);
-void getCentralDirectoryData(FILE *, struct zipFileDataStructure *, uint32_t);
+uint32_t getCentralDirectoryData(FILE *, struct zipFileDataStructure *, uint32_t);
 
 int main(int argc, char *argv[])
 {
@@ -39,9 +43,18 @@ int main(int argc, char *argv[])
 	struct zipFileDataStructure zipNameStructure;
 	zipNameStructure.root = NULL;
 
+	// get the end of cd offset and the data from it
 	findEndOfCentralDirectoryLocation(zipName, &zipNameStructure.locations);
 	getEndCentralDirectoryData(zipName, &zipNameStructure);
-	getCentralDirectoryData(zipName, &zipNameStructure, zipNameStructure.endCentralDirectoryRecord.offsetCdStart);
+
+	uint32_t offset = zipNameStructure.endCentralDirectoryRecord.offsetCdStart;
+
+	// obtain data for all the files in the archive cd
+	for(uint16_t filesRemaining = zipNameStructure.endCentralDirectoryRecord.totalEntries; filesRemaining > 0; --filesRemaining)
+	{
+		offset = getCentralDirectoryData(zipName, &zipNameStructure, offset);
+		printf("\n");
+	}
 
 	// close the file
 	fclose(zipName);
@@ -158,7 +171,7 @@ void getEndCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *data
 }
 
 // getCentralDirectoryData: grabs the central directory data at offset
-void getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dataStructure, uint32_t offset)
+uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dataStructure, uint32_t offset)
 {
 	struct centralDirectoryFileHeaderData *tempCd = NULL;
 
@@ -302,5 +315,14 @@ void getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dataStr
 		free(dataStructure->root);
 	}
 
-	return;
+	// returns next offset
+	uint32_t nextOffset = offset + 46 + dataStructure->root->fileNameLength + dataStructure->root->extraFieldLength + dataStructure->root->fileCommentLength;
+	uint32_t tempSignature;
+
+	// read the next signature and set the file cursor back to the beginning of the signature`
+	fread(&tempSignature, 4, 1, zipFile);
+	fseek(zipFile, nextOffset, SEEK_SET);
+
+	// returns the next offset if it is a valid cd entry otherwise return 0
+	return (tempSignature == 0x02014b50) ? nextOffset : 0;
 }
