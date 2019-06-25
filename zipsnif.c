@@ -8,9 +8,11 @@
 #include <stdlib.h>
 #include "zip.h"
 
+// funciton prototypes
 void findEndOfCentralDirectoryLocation(FILE *, struct zipDataLocations *);
 void getEndCentralDirectoryData(FILE *, struct zipFileDataStructure *);
 uint32_t getCentralDirectoryData(FILE *, struct zipFileDataStructure *, uint32_t);
+void freeCentralDirectoryFileHeaderData(struct zipFileDataStructure *);
 
 int main(int argc, char *argv[])
 {
@@ -56,6 +58,8 @@ int main(int argc, char *argv[])
 		printf("\n");
 	}
 
+	// free the central directory file headers
+	freeCentralDirectoryFileHeaderData(&zipNameStructure);
 	// close the file
 	fclose(zipName);
 	return 0;
@@ -305,15 +309,6 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 	*(((dataStructure->root->fileComment) + (dataStructure->root->fileCommentLength)) + 1) = '\0';
 	printf("File comment: %s\n", dataStructure->root->fileComment);
 
-	// Point to the root central directory so you can test it when freeing the structure
-	tempCd = dataStructure->root;
-	// free allocated central directories.  Temporary for testing.  Need seperate function for this.
-	while(tempCd != NULL)
-	{
-		tempCd = dataStructure->root->next;
-		free(dataStructure->root->fileName);
-		free(dataStructure->root);
-	}
 
 	// returns next offset
 	uint32_t nextOffset = offset + 46 + dataStructure->root->fileNameLength + dataStructure->root->extraFieldLength + dataStructure->root->fileCommentLength;
@@ -325,4 +320,22 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 
 	// returns the next offset if it is a valid cd entry otherwise return 0
 	return (tempSignature == 0x02014b50) ? nextOffset : 0;
+}
+
+// freeCentralDirectoryFileHeaderData: frees the malloc allocated data
+void freeCentralDirectoryFileHeaderData(struct zipFileDataStructure *dataStructure)
+{
+	struct centralDirectoryFileHeaderData *tempCd = NULL;
+	// free allocated central directories.  Temporary for testing.  Need seperate function for this.
+	while(dataStructure->root != NULL)
+	{
+		tempCd = dataStructure->root->next;
+		free(dataStructure->root->fileName);
+		free(dataStructure->root->extraField);
+		free(dataStructure->root->fileComment);
+		free(dataStructure->root);
+		dataStructure->root = tempCd;
+
+	}
+
 }
