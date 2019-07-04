@@ -55,3 +55,11 @@ struct zipFileDataStructure
 	struct endCentralDirectoryRecordData endCentralDirectoryRecord;
 	struct centralDirectoryFileHeaderData *root;
 };
+
+// function prototypes
+int findEndOfCentralDirectoryLocation(FILE *, struct zipDataLocations *);
+void freeCentralDirectoryFileHeaderData(struct zipFileDataStructure *);
+void getEndCentralDirectoryData(FILE *, struct zipFileDataStructure *);
+uint32_t getCentralDirectoryData(FILE *, struct zipFileDataStructure *, uint32_t);
+void sortCd(struct zipFileDataStructure *, uint8_t);
+void printCd(struct zipFileDataStructure *, uint8_t);
