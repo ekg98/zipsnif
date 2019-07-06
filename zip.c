@@ -257,6 +257,7 @@ void sortCd(struct zipFileDataStructure *dataStructure, uint8_t method)
 	struct centralDirectoryFileHeaderData *currentCd = NULL;
 	struct centralDirectoryFileHeaderData *nextCd = NULL;
 	struct centralDirectoryFileHeaderData *prevCd = NULL;
+	struct centralDirectoryFileHeaderData *secondPrevCd = NULL;
 	struct centralDirectoryFileHeaderData *walkingCd = dataStructure->root;
 
 	// runs through the scructure totalEntries amount of times
@@ -272,8 +273,8 @@ void sortCd(struct zipFileDataStructure *dataStructure, uint8_t method)
 				;
 			else
 			{
-				// entering sorting on first try
-				if(prevCd == NULL)
+				// entering sorting on first element of linked structure
+				if(prevCd == NULL && secondPrevCd == NULL)
 				{
 					// temporarally record old root
 					nextCd = dataStructure->root;
@@ -281,22 +282,68 @@ void sortCd(struct zipFileDataStructure *dataStructure, uint8_t method)
 					// make old root->next as the new root
 					dataStructure->root = dataStructure->root->next;
 
-					// make old root->next->next as the new root->next->next
+					// copy the new root->next into the old root->next
 					nextCd->next = dataStructure->root->next;
 
 					// make old root as new root->next
 					dataStructure->root->next = nextCd;
 
-					// change walkingCd to new location
+					// change walkingCd to the new root location
 					walkingCd = dataStructure->root;
 				}
+				// entering sorting on second element of linked structure
+				else //if(prevCd == dataStructure->root && secondPrevCd == NULL)
+				{
+					// prevCd->next is the current root instead of dataStructure->root because of indirecton
+
+					// temporarlly record old root
+					nextCd = prevCd->next;
+
+					// make old root->next as the new root
+					prevCd->next = prevCd->next->next;
+
+					// copy the new root->next into the old root->next
+					nextCd->next = prevCd->next->next;
+
+					// make the old root the new root->next
+					prevCd->next->next = nextCd;
+
+					// change walkingCd to the new root location`
+					walkingCd = prevCd->next;
+
+
+				}
+				// entering sorting on the 3rd or rest of the linked structure
+				/*else
+				{
+					nextCd = secondPrevCd->next;
+
+					secondPrevCd->next = secondPrevCd->next->next;
+
+					nextCd->next = secondPrevCd->next->next;
+
+					// this segfaults
+					//secondPrevCd->next->next = nextCd;
+					printf("%#x\n", secondPrevCd->next->next);
+
+					walkingCd = secondPrevCd->next;
+					prevCd = secondPrevCd->next;
+				}*/
 
 			}
 
-			// walks the current Cd to the next Cd
+			// records the previous cd into second previous cd and the current walking cd in prev cd for next run
+			secondPrevCd = prevCd;
 			prevCd = walkingCd;
+
+			// walks the current Cd to the next Cd
 			walkingCd = walkingCd->next;
 		}
+		prevCd = NULL;
+		secondPrevCd = NULL;
+		currentCd = NULL;
+		nextCd = NULL;
+		walkingCd = dataStructure->root;
 	}
 }
 
