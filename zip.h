@@ -2,6 +2,13 @@
 
 #include <stdint.h>
 
+// method tags for selection of search criteria inside search function
+enum methodTags
+{
+	ASCENDING	= 0x1,
+	DESCENDING	= 0x2
+};
+
 // location information for a zip file
 struct zipDataLocations
 {
@@ -62,4 +69,4 @@ void freeCentralDirectoryFileHeaderData(struct zipFileDataStructure *);
 void getEndCentralDirectoryData(FILE *, struct zipFileDataStructure *);
 uint32_t getCentralDirectoryData(FILE *, struct zipFileDataStructure *, uint32_t);
 void sortCd(struct zipFileDataStructure *, uint8_t);
-void printCd(struct zipFileDataStructure *, uint8_t);
+void printCd(struct zipFileDataStructure *);

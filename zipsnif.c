@@ -8,23 +8,65 @@
 #include <stdlib.h>
 #include "zip.h"
 
-// funciton prototypes
-
 int main(int argc, char *argv[])
 {
+	int argChar;
+	// declaration for sortMethod: contains the sorting method i.e. ascending or decending order.  This is a bitfield.
+	uint8_t sortMethod = 0;
+
+	// execution of the program without arguments
 	if(argc == 1)
 	{
-		printf("zipsnif: Utility to examine inside a zip and return information about it.\n");
-		printf("\tUseage: zipsnif <file>\n");
+		printf("zipsnif: Utility to examine inside a zip file and return information about it.\n");
+		printf("\tUseage: zipsnif <arguments> <file>\n");
 		exit(0);
 	}
-	else if(argc > 2)
-	{
-		fprintf(stderr, "zipsnif: Too many arguments.\n");
-		fprintf(stderr, "\tUseage: zipsnif <file>\n");
-		exit(1);
-	}
 
+	// check for arguments
+	while(--argc > 0)
+	{
+		if(*(*(++argv)) == '-')
+		{
+			while((argChar = (*++(*argv))))
+			{
+				switch(argChar)
+				{
+					// help menu is selected
+					case 'h':
+					case 'H':
+						printf("zipsnif: Utility to examine inside a zip file and return information about it.\n");
+						printf("\tUseage: zipsnif <arguments> <file>\n");
+						printf("\nArguments:\n");
+						printf("\t-h\tThis help menu.\n");
+						printf("\nSorting arguments: (default is ascending sort)\n");
+						printf("\t-a\tAscending alphabetical order sorting of file contents.\n");
+						printf("\t-d\tDescending alphabetical order sorting of file contents.\n");
+						exit(0);
+						break;
+
+					// ascending sort method is used.  Mask out DESCENDING
+					case 'a':
+					case 'A':
+						sortMethod &= DESCENDING;
+						sortMethod |= ASCENDING;
+						break;
+
+					// decending sort method is used.  Mask out ASCENDING
+					case 'd':
+					case 'D':
+						sortMethod &= ASCENDING;
+						sortMethod |= DESCENDING;
+						break;
+
+					default:
+						fprintf(stderr,"zipsnif: Unknown argument(s)\n");
+						exit(1);
+						break;
+				}
+			}
+		}
+	}
+/*
 	FILE *zipName;
 
 	if((zipName = fopen(argv[1], "r")) == NULL)
@@ -61,14 +103,15 @@ int main(int argc, char *argv[])
 	}
 
 	// sort the CD
-	sortCd(&zipNameStructure, 1);
+	sortCd(&zipNameStructure, sortMethod);
 
 	// print the CD
-	printCd(&zipNameStructure, 1);
+	printCd(&zipNameStructure);
 
 	// free the central directory file headers
 	freeCentralDirectoryFileHeaderData(&zipNameStructure);
 	// close the file
 	fclose(zipName);
+*/
 	return 0;
 }
