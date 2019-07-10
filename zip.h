@@ -5,6 +5,7 @@
 // method tags for selection of search criteria inside search function
 enum methodTags
 {
+	NOTHING 	= 0x0,
 	ASCENDING	= 0x1,
 	DESCENDING	= 0x2
 };

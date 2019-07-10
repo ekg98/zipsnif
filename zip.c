@@ -259,8 +259,13 @@ void sortCd(struct zipFileDataStructure *dataStructure, uint8_t method)
 	struct centralDirectoryFileHeaderData *prevCd = NULL;
 	struct centralDirectoryFileHeaderData *walkingCd = dataStructure->root;
 
-	if(method & ASCENDING)
-		;	// continue here
+	// checks to see if ascending or descending bit is enabled.  When in doubt revert to ascending sort order.
+	if((method & ASCENDING) == ASCENDING)
+		method = ASCENDING;
+	else if((method & DESCENDING) == DESCENDING)
+		method = DESCENDING;
+	else
+		method = ASCENDING;
 
 	switch(method)
 	{
