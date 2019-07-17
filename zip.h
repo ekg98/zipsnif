@@ -7,7 +7,8 @@ enum methodTags
 {
 	NOTHING 	= 0x0,
 	ASCENDING	= 0x1,
-	DESCENDING	= 0x2
+	DESCENDING	= 0x2,
+	EOCDRONLY	= 0x4
 };
 
 // location information for a zip file
@@ -59,6 +60,7 @@ struct endCentralDirectoryRecordData
 // structure for the data of a zip file
 struct zipFileDataStructure
 {
+	char *fileName;
 	struct zipDataLocations locations;
 	struct endCentralDirectoryRecordData endCentralDirectoryRecord;
 	struct centralDirectoryFileHeaderData *root;
@@ -71,3 +73,4 @@ void getEndCentralDirectoryData(FILE *, struct zipFileDataStructure *);
 uint32_t getCentralDirectoryData(FILE *, struct zipFileDataStructure *, uint32_t);
 void sortCd(struct zipFileDataStructure *, uint8_t);
 void printCd(struct zipFileDataStructure *);
+void printEocdr(struct zipFileDataStructure *);

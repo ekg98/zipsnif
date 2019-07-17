@@ -40,8 +40,10 @@ int main(int argc, char *argv[])
 					case 'H':
 						printf("zipsnif: Utility to examine inside zip file(s) and return information about it.\n");
 						printf("\tUseage: zipsnif <arguments> <file(s)>\n");
+						printf("\tWithout arguments generates a simple file listing.\n");
 						printf("\nArguments:\n");
 						printf("\t-h\tThis help menu.\n");
+						printf("\t-e\tPrint only end of central directory record data.\n");
 						printf("\nSorting arguments: (default is ascending sort)\n");
 						printf("\t-a\tAscending alphabetical order sorting of file contents.\n");
 						printf("\t-d\tDescending alphabetical order sorting of file contents.\n");
@@ -62,6 +64,12 @@ int main(int argc, char *argv[])
 						sortMethod |= DESCENDING;
 						break;
 
+					// enable only displaying end of central directory record data
+					case 'e':
+					case 'E':
+						sortMethod |= EOCDRONLY;
+						break;
+
 					default:
 						fprintf(stderr,"zipsnif: Unknown argument(s)\n");
 						exit(1);
@@ -72,20 +80,23 @@ int main(int argc, char *argv[])
 		else
 		{
 			FILE *zipName;
+			struct zipFileDataStructure zipNameStructure;
+			zipNameStructure.root = NULL;
 
+			// open files and check for errors in opening
 			if((zipName = fopen(argv[argCounter], "r")) == NULL)
 			{
 				fprintf(stderr, "zipsnif: Error opening file %s.\n", argv[argCounter]);
 				exit(1);
 			}
-			else if(ferror(zipName))
+
+			if(ferror(zipName))
 			{
 				fprintf(stderr, "zipsnif: Error reading file %s\n.", argv[argCounter]);
 				exit(1);
 			}
 
-			struct zipFileDataStructure zipNameStructure;
-			zipNameStructure.root = NULL;
+			zipNameStructure.fileName = argv[argCounter];
 
 			// get the end of cd offset and the data from it
 			if(findEndOfCentralDirectoryLocation(zipName, &zipNameStructure.locations))
@@ -96,24 +107,34 @@ int main(int argc, char *argv[])
 				exit(1);
 			}
 
+			// get the end of central directory record data
 			getEndCentralDirectoryData(zipName, &zipNameStructure);
 
-			uint32_t offset = zipNameStructure.endCentralDirectoryRecord.offsetCdStart;
-
-			// obtain data for all the files in the archive cd
-			for(uint16_t filesRemaining = zipNameStructure.endCentralDirectoryRecord.totalEntries; filesRemaining > 0; --filesRemaining)
+			// evaluate to see if the user requested only the end of central directory record data printed
+			if((sortMethod & EOCDRONLY) == EOCDRONLY)
 			{
-				offset = getCentralDirectoryData(zipName, &zipNameStructure, offset);
+				// print the end of central directory record data
+				printEocdr(&zipNameStructure);
+			}
+			else
+			{
+				// obtain data for all the files in the archive cd
+				uint32_t offset = zipNameStructure.endCentralDirectoryRecord.offsetCdStart;
+				for(uint16_t filesRemaining = zipNameStructure.endCentralDirectoryRecord.totalEntries; filesRemaining > 0; --filesRemaining)
+				{
+					offset = getCentralDirectoryData(zipName, &zipNameStructure, offset);
+				}
+
+				// sort the CD
+				sortCd(&zipNameStructure, sortMethod);
+
+				// print the CD
+				printCd(&zipNameStructure);
+
+				// free the central directory file headers
+				freeCentralDirectoryFileHeaderData(&zipNameStructure);
 			}
 
-			// sort the CD
-			sortCd(&zipNameStructure, sortMethod);
-
-			// print the CD
-			printCd(&zipNameStructure);
-
-			// free the central directory file headers
-			freeCentralDirectoryFileHeaderData(&zipNameStructure);
 			// close the file
 			fclose(zipName);
 		}

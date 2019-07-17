@@ -364,3 +364,22 @@ void printCd(struct zipFileDataStructure *dataStructure)
 		walkingCd = walkingCd->next;
 	}
 }
+
+// printEocdr: Prints the end of central directory record data
+void printEocdr(struct zipFileDataStructure *dataStructure)
+{
+	printf("\nEnd of central directory record data for %s\n", dataStructure->fileName);
+	printf("\n\tSignature: %#x\n", dataStructure->endCentralDirectoryRecord.signature);
+	printf("\tOffset: %#lx\n",  dataStructure->locations.endCentralDirectoryRecordLocation);
+	printf("\tDisk with EOCDR: %u\n", dataStructure->endCentralDirectoryRecord.diskNumber);
+
+	printf("\n\tCD Starting disk: %u\n", dataStructure->endCentralDirectoryRecord.diskNumberCdStart);
+	printf("\tCD Offset: %#x\n", dataStructure->endCentralDirectoryRecord.offsetCdStart);
+	printf("\tCD entries on current disk: %u\n", dataStructure->endCentralDirectoryRecord.diskEntries);
+	printf("\tTotal CD entries: %u\n", dataStructure->endCentralDirectoryRecord.totalEntries);
+	printf("\tCD Size (bytes): %u\n", dataStructure->endCentralDirectoryRecord.centralDirectorySize);
+
+	printf("\n\tComment Length: %u\n", dataStructure->endCentralDirectoryRecord.commentLength);
+	printf("\tComment: %s\n", dataStructure->endCentralDirectoryRecord.comment);
+	printf("\n");
+}
