@@ -123,6 +123,29 @@ int main(int argc, char *argv[])
 				for(uint16_t filesRemaining = zipNameStructure.endCentralDirectoryRecord.totalEntries; filesRemaining > 0; --filesRemaining)
 				{
 					offset = getCentralDirectoryData(zipName, &zipNameStructure, offset);
+
+
+					switch(offset)
+					{
+						case CDFH:
+							break;
+
+						case EOCDR:
+							break;
+
+						case NOSIG:
+							fprintf(stderr, "zipsnif: no readable signature found.\n");
+							exit(1);
+							break;
+
+
+						default:
+							fprintf(stderr, "Like Ralph said, I'm in danger.\t%#x\n", offset);
+							exit(1);
+							break;
+					}
+
+
 				}
 
 				// sort the CD

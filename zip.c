@@ -208,13 +208,6 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 	// extra field (variable)
 	dataStructure->root->extraField = (uint8_t *) malloc(dataStructure->root->extraFieldLength);
 	fread(dataStructure->root->extraField, 1, dataStructure->root->extraFieldLength, zipFile);
-	/*for(int extraCounter = dataStructure->root->extraFieldLength; extraCounter > 0; extraCounter--)
-	{
-		if(extraCounter == dataStructure->root->extraFieldLength)
-			printf("Extra field: ");
-		printf("%x", *(dataStructure->root->extraField + extraCounter));
-	}
-	printf("\n");*/
 
 	// file comment (variable)
 	dataStructure->root->fileComment = (char *) malloc(dataStructure->root->fileCommentLength + 1);
@@ -229,8 +222,22 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 	fread(&tempSignature, 4, 1, zipFile);
 	fseek(zipFile, nextOffset, SEEK_SET);
 
-	// returns the next offset if it is a valid cd entry otherwise return 0
-	return (tempSignature == 0x02014b50) ? nextOffset : 0;
+	// this switch checks to see the next signature and returns it
+	switch(tempSignature)
+	{
+		case EOCDR:
+			return EOCDR;
+			break;
+
+		case CDFH:
+			return nextOffset;
+			break;
+
+		// no known signature found
+		default:
+			return 0;
+			break;
+	}
 }
 
 // freeCentralDirectoryFileHeaderData: frees the malloc allocated data

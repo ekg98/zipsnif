@@ -11,6 +11,13 @@ enum methodTags
 	EOCDRONLY	= 0x4
 };
 
+enum signatureTags
+{
+	EOCDR		= 0x6054b50,
+	CDFH		= 0x2014b50,
+	NOSIG		= 0x0
+};
+
 // location information for a zip file
 struct zipDataLocations
 {
