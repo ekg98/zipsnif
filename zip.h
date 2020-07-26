@@ -73,6 +73,13 @@ struct zipFileDataStructure
 	struct centralDirectoryFileHeaderData *root;
 };
 
+// structure for offset location and status
+struct offsetInfo
+{
+	uint32_t offset;
+	uint32_t status;
+};
+
 // function prototypes
 int findEndOfCentralDirectoryLocation(FILE *, struct zipDataLocations *);
 void freeCentralDirectoryFileHeaderData(struct zipFileDataStructure *);

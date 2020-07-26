@@ -119,18 +119,21 @@ int main(int argc, char *argv[])
 			else
 			{
 				// obtain data for all the files in the archive cd
-				uint32_t offset = zipNameStructure.endCentralDirectoryRecord.offsetCdStart;
+				struct offsetInfo workingOffset;
+				workingOffset.offset = zipNameStructure.endCentralDirectoryRecord.offsetCdStart;
+
 				for(uint16_t filesRemaining = zipNameStructure.endCentralDirectoryRecord.totalEntries; filesRemaining > 0; --filesRemaining)
 				{
-					offset = getCentralDirectoryData(zipName, &zipNameStructure, offset);
+					workingOffset.offset = getCentralDirectoryData(zipName, &zipNameStructure, workingOffset.offset);
 
 
-					switch(offset)
+					switch(workingOffset.offset)
 					{
 						case CDFH:
+							exit(0);
 							break;
-
 						case EOCDR:
+							exit(0);
 							break;
 
 						case NOSIG:
@@ -140,7 +143,7 @@ int main(int argc, char *argv[])
 
 
 						default:
-							fprintf(stderr, "Like Ralph said, I'm in danger.\t%#x\n", offset);
+							fprintf(stderr, "Like Ralph said, I'm in danger.\t%#x\n", workingOffset.offset);
 							exit(1);
 							break;
 					}

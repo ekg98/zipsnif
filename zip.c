@@ -225,17 +225,19 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 	// this switch checks to see the next signature and returns it
 	switch(tempSignature)
 	{
+		// end of central directory record
 		case EOCDR:
 			return EOCDR;
 			break;
 
+		// central directory file header
 		case CDFH:
 			return nextOffset;
 			break;
 
 		// no known signature found
 		default:
-			return 0;
+			return NOSIG;
 			break;
 	}
 }
