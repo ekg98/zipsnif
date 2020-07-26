@@ -106,7 +106,7 @@ void getEndCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *data
 }
 
 // getCentralDirectoryData: grabs the central directory data at offset
-uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dataStructure, uint32_t offset)
+uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dataStructure, uint32_t offset, struct offsetInfo *offsetInfo)
 {
 	struct centralDirectoryFileHeaderData *tempCd = NULL;
 
@@ -227,16 +227,19 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 	{
 		// end of central directory record
 		case EOCDR:
+			offsetInfo->status = EOCDR;
 			return EOCDR;
 			break;
 
 		// central directory file header
 		case CDFH:
+			offsetInfo->status = CDFH;
 			return nextOffset;
 			break;
 
 		// no known signature found
 		default:
+			offsetInfo->status = NOSIG;
 			return NOSIG;
 			break;
 	}

@@ -124,24 +124,21 @@ int main(int argc, char *argv[])
 
 				for(uint16_t filesRemaining = zipNameStructure.endCentralDirectoryRecord.totalEntries; filesRemaining > 0; --filesRemaining)
 				{
-					workingOffset.offset = getCentralDirectoryData(zipName, &zipNameStructure, workingOffset.offset);
+					workingOffset.offset = getCentralDirectoryData(zipName, &zipNameStructure, workingOffset.offset, &workingOffset);
 
 
-					switch(workingOffset.offset)
+					switch(workingOffset.status)
 					{
 						case CDFH:
-							exit(0);
 							break;
 						case EOCDR:
-							exit(0);
+							printEocdr(&zipNameStructure);
 							break;
 
 						case NOSIG:
 							fprintf(stderr, "zipsnif: no readable signature found.\n");
 							exit(1);
 							break;
-
-
 						default:
 							fprintf(stderr, "Like Ralph said, I'm in danger.\t%#x\n", workingOffset.offset);
 							exit(1);
