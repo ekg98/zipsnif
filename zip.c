@@ -99,10 +99,6 @@ void getEndCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *data
 	fread(dataStructure->endCentralDirectoryRecord.comment, 1, dataStructure->endCentralDirectoryRecord.commentLength, zipFile);
 	*(((dataStructure->endCentralDirectoryRecord.comment) + (dataStructure->endCentralDirectoryRecord.commentLength)) + 1) = '\0';
 
-	// temporary garbage handling for comment
-	free(dataStructure->endCentralDirectoryRecord.comment);
-
-	return;
 }
 
 // getCentralDirectoryData: grabs the central directory data at offset
@@ -245,8 +241,8 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 	}
 }
 
-// freeCentralDirectoryFileHeaderData: frees the malloc allocated data
-void freeCentralDirectoryFileHeaderData(struct zipFileDataStructure *dataStructure)
+// freeCFileHeaderData: frees the malloc allocated data
+void freeFileHeaderData(struct zipFileDataStructure *dataStructure)
 {
 	struct centralDirectoryFileHeaderData *tempCd = NULL;
 	// free allocated central directories.  Temporary for testing.  Need seperate function for this.
@@ -258,7 +254,6 @@ void freeCentralDirectoryFileHeaderData(struct zipFileDataStructure *dataStructu
 		free(dataStructure->root->fileComment);
 		free(dataStructure->root);
 		dataStructure->root = tempCd;
-
 	}
 
 }
@@ -366,7 +361,7 @@ void sortCd(struct zipFileDataStructure *dataStructure, uint8_t method)
 }
 
 // printCd: Prints the files within the CD
-void printCd(struct zipFileDataStructure *dataStructure)
+void printCdShort(struct zipFileDataStructure *dataStructure)
 {
 	struct centralDirectoryFileHeaderData *walkingCd = dataStructure->root;
 

@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 			zipNameStructure.root = NULL;
 
 			// open files and check for errors in opening
-			if((zipName = fopen(argv[argCounter], "r")) == NULL)
+			if((zipName = fopen(argv[argCounter], "rb")) == NULL)
 			{
 				fprintf(stderr, "zipsnif: Error opening file %s.\n", argv[argCounter]);
 				exit(1);
@@ -152,10 +152,10 @@ int main(int argc, char *argv[])
 				sortCd(&zipNameStructure, sortMethod);
 
 				// print the CD
-				printCd(&zipNameStructure);
+				printCdShort(&zipNameStructure);
 
-				// free the central directory file headers
-				freeCentralDirectoryFileHeaderData(&zipNameStructure);
+				// free the file headers
+				freeFileHeaderData(&zipNameStructure);
 			}
 
 			// close the file

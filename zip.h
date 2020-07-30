@@ -11,6 +11,7 @@ enum methodTags
 	EOCDRONLY	= 0x4
 };
 
+// Signatures for PK headers in file
 enum signatureTags
 {
 	EOCDR		= 0x6054b50,
@@ -82,9 +83,9 @@ struct offsetInfo
 
 // function prototypes
 int findEndOfCentralDirectoryLocation(FILE *, struct zipDataLocations *);
-void freeCentralDirectoryFileHeaderData(struct zipFileDataStructure *);
+void freeFileHeaderData(struct zipFileDataStructure *);
 void getEndCentralDirectoryData(FILE *, struct zipFileDataStructure *);
 uint32_t getCentralDirectoryData(FILE *, struct zipFileDataStructure *, uint32_t, struct offsetInfo *);
 void sortCd(struct zipFileDataStructure *, uint8_t);
-void printCd(struct zipFileDataStructure *);
+void printCdShort(struct zipFileDataStructure *);
 void printEocdr(struct zipFileDataStructure *);
