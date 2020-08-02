@@ -129,9 +129,9 @@ int main(int argc, char *argv[])
 
 					switch(workingOffset.status)
 					{
-						case CDFH:
+						case ZIPCDFH:
 							break;
-						case EOCDR:
+						case ZIPEOCDR:
 							printEocdr(&zipNameStructure);
 							break;
 

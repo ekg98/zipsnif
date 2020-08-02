@@ -14,8 +14,9 @@ enum methodTags
 // Signatures for PK headers in file
 enum signatureTags
 {
-	EOCDR		= 0x6054b50,
-	CDFH		= 0x2014b50,
+	ZIPEOCDR	= 0x06054b50,
+	ZIP64EOCDR	= 0x07064b50,
+	ZIPCDFH		= 0x02014b50,
 	NOSIG		= 0x0
 };
 
