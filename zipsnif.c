@@ -118,14 +118,19 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-				// obtain data for all the files in the archive cd
+				// Set offset CD start and seek file to that location
 				struct offsetInfo workingOffset;
 				workingOffset.offset = zipNameStructure.endCentralDirectoryRecord.offsetCdStart;
+				fseek(zipName, workingOffset.offset, SEEK_SET);
 
+				// obtain data from the file for the CDFH
 				for(uint16_t filesRemaining = zipNameStructure.endCentralDirectoryRecord.totalEntries; filesRemaining > 0; --filesRemaining)
 				{
-					workingOffset.offset = getCentralDirectoryData(zipName, &zipNameStructure, workingOffset.offset, &workingOffset);
-
+					printf("check = %#x ", sigCheck(zipName, ZIPCDFH));
+					if(sigCheck(zipName, ZIPCDFH) == ZIPCDFH)
+						workingOffset.offset = getCentralDirectoryData(zipName, &zipNameStructure, workingOffset.offset, &workingOffset);
+					else
+						workingOffset.status = NOSIG;
 
 					switch(workingOffset.status)
 					{

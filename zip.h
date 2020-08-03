@@ -90,3 +90,4 @@ uint32_t getCentralDirectoryData(FILE *, struct zipFileDataStructure *, uint32_t
 void sortCd(struct zipFileDataStructure *, uint8_t);
 void printCdShort(struct zipFileDataStructure *);
 void printEocdr(struct zipFileDataStructure *);
+enum signatureTags sigCheck(FILE *, enum signatureTags);

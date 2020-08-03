@@ -212,7 +212,7 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 	fread(dataStructure->root->fileComment, 1, dataStructure->root->fileCommentLength, zipFile);
 	*(((dataStructure->root->fileComment) + (dataStructure->root->fileCommentLength)) + 1) = '\0';
 
-	// returns next offset
+	// returns next offset only on assumption.
 	uint32_t nextOffset = offset + 46 + dataStructure->root->fileNameLength + dataStructure->root->extraFieldLength + dataStructure->root->fileCommentLength;
 	uint32_t tempSignature;
 
@@ -391,4 +391,29 @@ void printEocdr(struct zipFileDataStructure *dataStructure)
 	printf("\n\tComment Length: %u\n", dataStructure->endCentralDirectoryRecord.commentLength);
 	printf("\tComment: %s\n", dataStructure->endCentralDirectoryRecord.comment);
 	printf("\n");
+}
+
+// sigCheck:  Checks the next 4 byte sequence in a file starting at the input offset for a signature
+enum signatureTags sigCheck(FILE *zipFile, enum signatureTags tag)
+{
+	uint32_t intToCheck;
+
+	fread(&intToCheck, 4, 1, zipFile);
+	fseek(zipFile, -4, SEEK_CUR);
+
+	switch(intToCheck)
+	{
+		case ZIPEOCDR:
+			return ZIPEOCDR;
+			break;
+		case ZIP64EOCDR:
+			return ZIP64EOCDR;
+			break;
+		case ZIPCDFH:
+			return ZIPCDFH;
+			break;
+		default:
+			return NOSIG;
+			break;
+	}
 }
