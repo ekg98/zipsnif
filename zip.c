@@ -117,12 +117,26 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 	if(dataStructure->root == NULL)
 	{
 		dataStructure->root = (struct centralDirectoryFileHeaderData *) malloc(sizeof(struct centralDirectoryFileHeaderData));
+
+		if(dataStructure->root == NULL)
+		{
+			fprintf(stderr, "Malloc error allocating new file structure.\n");
+			exit(1);
+		}
+
 		dataStructure->root->next = NULL;
 	}
 	else	// allocate for a new entry and push the old on down the line
 	{
 		tempCd = dataStructure->root;
 		dataStructure->root = (struct centralDirectoryFileHeaderData *) malloc(sizeof(struct centralDirectoryFileHeaderData));
+
+		if(dataStructure->root == NULL)
+		{
+			fprintf(stderr, "Malloc error allocating new file structure.\n");
+			exit(1);
+		}
+
 		dataStructure->root->next = tempCd;
 		tempCd = NULL;
 	}
@@ -200,15 +214,30 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 
 	// file name (variable)
 	dataStructure->root->fileName = (char *) malloc(dataStructure->root->fileNameLength + 1);
+	if(dataStructure->root->fileName == NULL)
+	{
+			fprintf(stderr, "Malloc error allocating file name.\n");
+			exit(1);
+	}
 	fread(dataStructure->root->fileName, 1, dataStructure->root->fileNameLength, zipFile);
 	*(((dataStructure->root->fileName) + (dataStructure->root->fileNameLength)) + 1) = '\0';
 
 	// extra field (variable)
 	dataStructure->root->extraField = (uint8_t *) malloc(dataStructure->root->extraFieldLength);
+	if(dataStructure->root->extraField == NULL)
+	{
+			fprintf(stderr, "Malloc error allocating extra field.\n");
+			exit(1);
+	}
 	fread(dataStructure->root->extraField, 1, dataStructure->root->extraFieldLength, zipFile);
 
 	// file comment (variable)
 	dataStructure->root->fileComment = (char *) malloc(dataStructure->root->fileCommentLength + 1);
+	if(dataStructure->root->fileComment == NULL)
+	{
+			fprintf(stderr, "Malloc error allocating file comment.\n");
+			exit(1);
+	}
 	fread(dataStructure->root->fileComment, 1, dataStructure->root->fileCommentLength, zipFile);
 	*(((dataStructure->root->fileComment) + (dataStructure->root->fileCommentLength)) + 1) = '\0';
 
