@@ -49,7 +49,7 @@ struct centralDirectoryFileHeaderData
 	char *fileName;				// file name
 	uint8_t *extraField;			// extra field
 	char *fileComment;			// file comment
-	struct centralDirectoryFileHeaderData *next;	// pointer to next element of the CD
+	struct centralDirectoryFileHeaderData *next; // pointer to next element of the CD
 };
 
 // structure containing the end of central directory record data

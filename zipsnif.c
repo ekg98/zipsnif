@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 				// obtain data from the file for the CDFH
 				for(uint16_t filesRemaining = zipNameStructure.endCentralDirectoryRecord.totalEntries; filesRemaining > 0; --filesRemaining)
 				{
-					printf("check = %#x ", sigCheck(zipName, ZIPCDFH));
+					//printf("check = %#x ", sigCheck(zipName, ZIPCDFH));
 					if(sigCheck(zipName, ZIPCDFH) == ZIPCDFH)
 						workingOffset.offset = getCentralDirectoryData(zipName, &zipNameStructure, workingOffset.offset, &workingOffset);
 					else
