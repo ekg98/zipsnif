@@ -82,6 +82,8 @@ int main(int argc, char *argv[])
 			FILE *zipName;
 			struct zipFileDataStructure zipNameStructure;
 			zipNameStructure.root = NULL;
+			zipNameStructure.fileName = NULL;
+			zipNameStructure.endCentralDirectoryRecord.comment = NULL;
 
 			// open files and check for errors in opening
 			if((zipName = fopen(argv[argCounter], "rb")) == NULL)

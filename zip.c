@@ -96,8 +96,8 @@ void getEndCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *data
 
 	// archive comment (variable)
 	dataStructure->endCentralDirectoryRecord.comment = (char *) malloc(dataStructure->endCentralDirectoryRecord.commentLength + 1);
-	fread(dataStructure->endCentralDirectoryRecord.comment, 1, dataStructure->endCentralDirectoryRecord.commentLength, zipFile);
-	*(((dataStructure->endCentralDirectoryRecord.comment) + (dataStructure->endCentralDirectoryRecord.commentLength)) + 1) = '\0';
+	fread(dataStructure->endCentralDirectoryRecord.comment, sizeof(char), dataStructure->endCentralDirectoryRecord.commentLength, zipFile);
+	*(((dataStructure->endCentralDirectoryRecord.comment) + (dataStructure->endCentralDirectoryRecord.commentLength)))  = '\0';
 
 }
 
@@ -125,7 +125,9 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 		}
 
 		dataStructure->root->next = NULL;
-		//dataStructure->root->fileName = NULL;
+		dataStructure->root->fileName = NULL;
+		dataStructure->root->extraField = NULL;
+		dataStructure->root->fileComment = NULL;
 	}
 	else	// allocate for a new entry and push the old on down the line
 	{
@@ -139,6 +141,9 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 		}
 
 		dataStructure->root->next = tempCd;
+		dataStructure->root->fileName = NULL;
+		dataStructure->root->extraField = NULL;
+		dataStructure->root->fileComment = NULL;
 		tempCd = NULL;
 	}
 
@@ -222,7 +227,7 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 	// file name (variable)
 
 	// malloc fails here if set to 1 for null terminator on large zips.  For some reason levi thinks malloc is allocating a strange amount of memory possibly not leaving room for mallocs internals.
-	dataStructure->root->fileName = (char *) malloc(dataStructure->root->fileNameLength + 2);
+	dataStructure->root->fileName = (char *) malloc(dataStructure->root->fileNameLength + 1);
 	if(dataStructure->root->fileName == NULL)
 	{
 			fprintf(stderr, "Malloc error allocating file name.\n");
@@ -230,7 +235,7 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 	}
 
 	fread(dataStructure->root->fileName, 1, dataStructure->root->fileNameLength, zipFile);
-	*(((dataStructure->root->fileName) + (dataStructure->root->fileNameLength)) + 1) = '\0';
+	*(((dataStructure->root->fileName) + (dataStructure->root->fileNameLength))) = '\0';
 
 	// extra field (variable)
 	dataStructure->root->extraField = (uint8_t *) malloc(dataStructure->root->extraFieldLength);
@@ -249,7 +254,7 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 			exit(1);
 	}
 	fread(dataStructure->root->fileComment, 1, dataStructure->root->fileCommentLength, zipFile);
-	*(((dataStructure->root->fileComment) + (dataStructure->root->fileCommentLength)) + 1) = '\0';
+	*(((dataStructure->root->fileComment) + (dataStructure->root->fileCommentLength))) = '\0';
 
 	// returns next offset only on assumption.
 	uint32_t nextOffset = offset + 46 + dataStructure->root->fileNameLength + dataStructure->root->extraFieldLength + dataStructure->root->fileCommentLength;
