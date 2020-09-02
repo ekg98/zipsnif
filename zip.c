@@ -96,7 +96,7 @@ void getEndCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *data
 
 	// archive comment (variable)
 	dataStructure->endCentralDirectoryRecord.comment = (char *) malloc(dataStructure->endCentralDirectoryRecord.commentLength + 1);
-	fread(dataStructure->endCentralDirectoryRecord.comment, sizeof(char), dataStructure->endCentralDirectoryRecord.commentLength, zipFile);
+	fread(dataStructure->endCentralDirectoryRecord.comment, 1, dataStructure->endCentralDirectoryRecord.commentLength, zipFile);
 	*(((dataStructure->endCentralDirectoryRecord.comment) + (dataStructure->endCentralDirectoryRecord.commentLength)))  = '\0';
 
 }
@@ -104,7 +104,6 @@ void getEndCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *data
 // getCentralDirectoryData: grabs the central directory data at offset
 uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dataStructure, uint32_t offset, struct offsetInfo *offsetInfo)
 {
-	//printf("offset = %#x\n", offset);
 
 	struct centralDirectoryFileHeaderData *tempCd = NULL;
 
@@ -218,15 +217,7 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 	fread(&fourByteTemp, 4, 1, zipFile);
 	dataStructure->root->offsetLocalFileHeader = fourByteTemp;
 
-	// fails here.
-	/*if(offset == 0x8e940d5)
-	{
-		printf("got this far\n");
-		printf("fileNameLength == %d\n", dataStructure->root->fileNameLength);
-	}*/
 	// file name (variable)
-
-	// malloc fails here if set to 1 for null terminator on large zips.  For some reason levi thinks malloc is allocating a strange amount of memory possibly not leaving room for mallocs internals.
 	dataStructure->root->fileName = (char *) malloc(dataStructure->root->fileNameLength + 1);
 	if(dataStructure->root->fileName == NULL)
 	{
@@ -287,11 +278,11 @@ uint32_t getCentralDirectoryData(FILE *zipFile, struct zipFileDataStructure *dat
 	}
 }
 
-// freeCFileHeaderData: frees the malloc allocated data
-void freeFileHeaderData(struct zipFileDataStructure *dataStructure)
+// freeCentralDirectoryHeaderData: frees the malloc allocated data
+void freeCentralDirectoryHeaderData(struct zipFileDataStructure *dataStructure)
 {
 	struct centralDirectoryFileHeaderData *tempCd = NULL;
-	// free allocated central directories.  Temporary for testing.  Need seperate function for this.
+
 	while(dataStructure->root != NULL)
 	{
 		tempCd = dataStructure->root->next;

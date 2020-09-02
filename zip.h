@@ -84,7 +84,7 @@ struct offsetInfo
 
 // function prototypes
 int findEndOfCentralDirectoryLocation(FILE *, struct zipDataLocations *);
-void freeFileHeaderData(struct zipFileDataStructure *);
+void freeCentralDirectoryHeaderData(struct zipFileDataStructure *);
 void getEndCentralDirectoryData(FILE *, struct zipFileDataStructure *);
 void freeEndCentralDirectoryHeaderData(struct zipFileDataStructure *);
 uint32_t getCentralDirectoryData(FILE *, struct zipFileDataStructure *, uint32_t, struct offsetInfo *);
