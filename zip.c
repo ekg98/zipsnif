@@ -304,6 +304,13 @@ void freeFileHeaderData(struct zipFileDataStructure *dataStructure)
 
 }
 
+// freeEndCentralDirectoryHeaderData: frees the end of central directory record data that was allocated.
+void freeEndCentralDirectoryHeaderData(struct zipFileDataStructure *dataStructure)
+{
+	free(dataStructure->endCentralDirectoryRecord.comment);
+	dataStructure->endCentralDirectoryRecord.comment = NULL;
+}
+
 // sortCd: Sort central directory structure
 void sortCd(struct zipFileDataStructure *dataStructure, uint8_t method)
 {

@@ -163,6 +163,7 @@ int main(int argc, char *argv[])
 
 				// free the file headers
 				freeFileHeaderData(&zipNameStructure);
+				freeEndCentralDirectoryHeaderData(&zipNameStructure);
 			}
 
 			// close the file
